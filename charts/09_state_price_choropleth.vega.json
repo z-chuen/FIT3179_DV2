@@ -1,0 +1,397 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v6.json",
+  "description": "State choropleth of the median of sampled-outlet median pack prices. The same selected named product and pack is used throughout. Unweighted sample statistics, not representative state-wide retail prices. States with fewer than five outlets are grey but retain sample counts in tooltips.",
+  "width": 900,
+  "height": 450,
+  "padding": {
+    "left": 12,
+    "right": 12,
+    "top": 95,
+    "bottom": 75
+  },
+  "autosize": {
+    "type": "none",
+    "contains": "padding",
+    "resize": true
+  },
+  "background": "#ffffff",
+  "title": {
+    "text": [
+      "Where are observed",
+      "pack prices higher?"
+    ],
+    "subtitle": [
+      "PriceCatcher | 12 Oct 2026 | Malaysia",
+      "Compare the same product and pack. Grey = fewer than 5 sampled outlets."
+    ],
+    "anchor": "start",
+    "font": "Arial",
+    "fontSize": 20,
+    "color": "#172b46",
+    "subtitleFont": "Arial",
+    "subtitleFontSize": 12,
+    "subtitleColor": "#536174",
+    "offset": 16
+  },
+  "signals": [
+    {
+      "name": "selectedItem",
+      "value": 2000,
+      "bind": {
+        "input": "select",
+        "name": "Compare one product: ",
+        "options": [
+          2000,
+          1999,
+          1998
+        ],
+        "labels": [
+          "Ajax Fabuloso lavender · 2 L",
+          "Mr Muscle lavender · 2 L",
+          "Dettol lavender · 2.5 L"
+        ]
+      }
+    },
+    {
+      "name": "productLabel",
+      "update": "selectedItem===2000 ? 'Ajax Fabuloso lavender · 2 L' : selectedItem===1999 ? 'Mr Muscle lavender · 2 L' : 'Dettol lavender · 2.5 L'"
+    },
+    {
+      "name": "minimumOutlets",
+      "value": 5
+    },
+    {
+      "name": "sampleOutlets",
+      "update": "data('sampleTotal').length ? data('sampleTotal')[0].n_outlets : 0"
+    }
+  ],
+  "data": [
+    {
+      "name": "items",
+      "url": "data/lookup_item.csv",
+      "format": {
+        "type": "csv",
+        "parse": {
+          "item_code": "number"
+        }
+      }
+    },
+    {
+      "name": "premises",
+      "url": "data/lookup_premise.csv",
+      "format": {
+        "type": "csv",
+        "parse": {
+          "premise_code": "number"
+        }
+      }
+    },
+    {
+      "name": "prices",
+      "url": "data/pricecatcher_household_oct2026.csv",
+      "format": {
+        "type": "csv",
+        "parse": {
+          "item_code": "number",
+          "premise_code": "number",
+          "price": "number"
+        }
+      },
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.item_code===selectedItem && isValid(datum.price) && datum.price>0"
+        },
+        {
+          "type": "lookup",
+          "from": "premises",
+          "key": "premise_code",
+          "fields": [
+            "premise_code"
+          ],
+          "values": [
+            "state",
+            "district",
+            "premise"
+          ],
+          "as": [
+            "state",
+            "district",
+            "premise"
+          ]
+        },
+        {
+          "type": "lookup",
+          "from": "items",
+          "key": "item_code",
+          "fields": [
+            "item_code"
+          ],
+          "values": [
+            "item",
+            "unit"
+          ],
+          "as": [
+            "item",
+            "unit"
+          ]
+        },
+        {
+          "type": "filter",
+          "expr": "isValid(datum.state)"
+        }
+      ]
+    },
+    {
+      "name": "outletMedians",
+      "source": "prices",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "state",
+            "premise_code"
+          ],
+          "ops": [
+            "median"
+          ],
+          "fields": [
+            "price"
+          ],
+          "as": [
+            "outlet_price_rm"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sampleTotal",
+      "source": "outletMedians",
+      "transform": [
+        {
+          "type": "aggregate",
+          "ops": [
+            "count"
+          ],
+          "as": [
+            "n_outlets"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stateStats",
+      "source": "outletMedians",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "state"
+          ],
+          "ops": [
+            "median",
+            "q1",
+            "q3",
+            "count"
+          ],
+          "fields": [
+            "outlet_price_rm",
+            "outlet_price_rm",
+            "outlet_price_rm",
+            null
+          ],
+          "as": [
+            "median_rm",
+            "q1_rm",
+            "q3_rm",
+            "n_outlets"
+          ]
+        },
+        {
+          "type": "formula",
+          "expr": "datum.q3_rm-datum.q1_rm",
+          "as": "spread_rm"
+        }
+      ]
+    },
+    {
+      "name": "eligibleStats",
+      "source": "stateStats",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.n_outlets>=minimumOutlets"
+        }
+      ]
+    },
+    {
+      "name": "boundaries",
+      "url": "data/malaysia_states.geojson",
+      "format": {
+        "type": "json",
+        "property": "features"
+      }
+    },
+    {
+      "name": "regions",
+      "source": "boundaries",
+      "transform": [
+        {
+          "type": "lookup",
+          "from": "stateStats",
+          "key": "state",
+          "fields": [
+            "properties.state"
+          ],
+          "as": [
+            "stats"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "anchors",
+      "url": "data/state_display_anchors.csv",
+      "format": {
+        "type": "csv",
+        "parse": {
+          "longitude": "number",
+          "latitude": "number"
+        }
+      },
+      "transform": [
+        {
+          "type": "lookup",
+          "from": "stateStats",
+          "key": "state",
+          "fields": [
+            "state"
+          ],
+          "as": [
+            "stats"
+          ]
+        },
+        {
+          "type": "geopoint",
+          "projection": "mapProjection",
+          "fields": [
+            "longitude",
+            "latitude"
+          ],
+          "as": [
+            "x",
+            "y"
+          ]
+        }
+      ]
+    }
+  ],
+  "projections": [
+    {
+      "name": "mapProjection",
+      "type": "mercator",
+      "fit": {
+        "signal": "data('boundaries')"
+      },
+      "size": {
+        "signal": "[width,height-45]"
+      }
+    }
+  ],
+  "scales": [
+    {
+      "name": "priceColour",
+      "type": "linear",
+      "domain": {
+        "data": "eligibleStats",
+        "field": "median_rm"
+      },
+      "range": [
+        "#d4eceb",
+        "#075d58"
+      ],
+      "zero": false
+    }
+  ],
+  "legends": [
+    {
+      "fill": "priceColour",
+      "title": "Median observed pack price (RM)",
+      "titleLimit": 500,
+      "type": "gradient",
+      "orient": "bottom",
+      "direction": "horizontal",
+      "gradientLength": 260,
+      "format": ".2f",
+      "titleFont": "Arial",
+      "labelFont": "Arial"
+    }
+  ],
+  "marks": [
+    {
+      "name": "stateShapes",
+      "type": "shape",
+      "from": {
+        "data": "regions"
+      },
+      "transform": [
+        {
+          "type": "geoshape",
+          "projection": "mapProjection"
+        }
+      ],
+      "encode": {
+        "update": {
+          "fill": {
+            "signal": "datum.stats && datum.stats.n_outlets>=minimumOutlets ? scale('priceColour',datum.stats.median_rm) : '#d9dfe5'"
+          },
+          "stroke": {
+            "value": "#ffffff"
+          },
+          "strokeWidth": {
+            "value": 1.2
+          },
+          "tooltip": {
+            "signal": "{'State / territory':datum.properties.state,'Product':productLabel,'Median pack price (RM)':datum.stats ? format(datum.stats.median_rm,'.2f') : 'No observations','Sampled outlets':datum.stats ? datum.stats.n_outlets : 0,'Display rule':datum.stats && datum.stats.n_outlets>=minimumOutlets ? 'At least 5 sampled outlets' : 'Fewer than 5 sampled outlets / no observations'}"
+          }
+        },
+        "hover": {
+          "stroke": {
+            "value": "#172b46"
+          },
+          "strokeWidth": {
+            "value": 2
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "encode": {
+        "update": {
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "signal": "height-12"
+          },
+          "text": {
+            "signal": "productLabel + ' | ' + sampleOutlets + ' sampled outlets | observed 12 Oct 2026'"
+          },
+          "font": {
+            "value": "Arial"
+          },
+          "fontSize": {
+            "value": 12
+          },
+          "fill": {
+            "value": "#536174"
+          },
+          "limit": {
+            "signal": "width"
+          }
+        }
+      }
+    }
+  ]
+}

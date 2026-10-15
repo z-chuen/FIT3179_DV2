@@ -1,0 +1,236 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Individual-listing dot plot. Rating stays at its recorded value on the x axis. Only vertical position is offset to separate identical scores within a category group. No averages or brand ratings are invented.",
+  "width": 760,
+  "height": {
+    "step": 225
+  },
+  "autosize": {
+    "type": "fit-x",
+    "contains": "padding",
+    "resize": true
+  },
+  "padding": {
+    "top": 40,
+    "left": 8,
+    "right": 8,
+    "bottom": 8
+  },
+  "title": {
+    "text": [
+      "Customer ratings across",
+      "household product categories"
+    ],
+    "subtitle": [
+      "Shopee Malaysia | 24 Apr–13 May 2023",
+      "Each dot = one listing. All five category groups are shown."
+    ],
+    "anchor": "start"
+  },
+  "config": {
+    "font": "Arial",
+    "background": "#ffffff",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "gridColor": "#e6ecf0",
+      "domainColor": "#bdc8d2",
+      "tickColor": "#bdc8d2",
+      "titlePadding": 10
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "symbolStrokeWidth": 0
+    },
+    "title": {
+      "fontSize": 20,
+      "color": "#172b46",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#536174",
+      "anchor": "start",
+      "offset": 16
+    }
+  },
+  "data": {
+    "url": "data/shopee_household_2023.csv",
+    "format": {
+      "type": "csv",
+      "parse": {
+        "price_actual": "number",
+        "price_ori": "number",
+        "item_rating": "number",
+        "rating_count": "number"
+      }
+    }
+  },
+  "transform": [
+    {
+      "filter": "isValid(datum.item_rating) && datum.item_rating >= 1 && datum.item_rating <= 5"
+    },
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "tie_rank"
+        },
+        {
+          "op": "count",
+          "as": "tie_count"
+        }
+      ],
+      "frame": [
+        null,
+        null
+      ],
+      "groupby": [
+        "source_category_group",
+        "item_rating"
+      ],
+      "sort": [
+        {
+          "field": "rating_count",
+          "order": "descending"
+        },
+        {
+          "field": "product_id",
+          "order": "ascending"
+        }
+      ]
+    },
+    {
+      "calculate": "(datum.tie_rank - (datum.tie_count + 1)/2)*3.5",
+      "as": "dot_offset"
+    }
+  ],
+  "mark": {
+    "type": "point",
+    "filled": true,
+    "size": 7,
+    "opacity": 0.95
+  },
+  "encoding": {
+    "x": {
+      "field": "item_rating",
+      "type": "quantitative",
+      "title": "Customer rating (out of 5)",
+      "scale": {
+        "domain": [
+          1,
+          5
+        ],
+        "zero": false
+      },
+      "axis": {
+        "values": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    },
+    "y": {
+      "field": "source_category_group",
+      "type": "nominal",
+      "title": null,
+      "sort": [
+        "Housekeeping & Laundry",
+        "Household Supplies",
+        "Home Storage & Organization",
+        "Kitchen Storage",
+        "Kitchen & Dining"
+      ],
+      "scale": {
+        "type": "point",
+        "padding": 0.5
+      },
+      "axis": {
+        "labelLimit": 260,
+        "labelPadding": 12,
+        "ticks": false,
+        "domain": false
+      }
+    },
+    "yOffset": {
+      "field": "dot_offset",
+      "type": "quantitative",
+      "scale": null
+    },
+    "color": {
+      "field": "topic_group",
+      "type": "nominal",
+      "scale": {
+        "domain": [
+          "Cleaning supplies",
+          "Storage products",
+          "Kitchen essentials"
+        ],
+        "range": [
+          "#17857c",
+          "#8266b2",
+          "#ce7b22"
+        ]
+      },
+      "legend": {
+        "title": "Product group",
+        "orient": "top",
+        "direction": "horizontal",
+        "columns": 3,
+        "labelLimit": 400
+      }
+    },
+    "tooltip": [
+      {
+        "field": "title",
+        "type": "nominal",
+        "title": "Listing"
+      },
+      {
+        "field": "source_category_group",
+        "type": "nominal",
+        "title": "Category group"
+      },
+      {
+        "field": "product_category",
+        "type": "nominal",
+        "title": "Detailed category"
+      },
+      {
+        "field": "price_actual",
+        "type": "quantitative",
+        "title": "Listed price (RM)",
+        "format": ".2f"
+      },
+      {
+        "field": "item_rating",
+        "type": "quantitative",
+        "title": "Rating out of 5",
+        "format": ".1f"
+      },
+      {
+        "field": "total_rating",
+        "type": "nominal",
+        "title": "Rating count (source)"
+      },
+      {
+        "field": "w_date",
+        "type": "nominal",
+        "title": "Observed on"
+      },
+      {
+        "field": "product_id",
+        "type": "nominal",
+        "title": "Listing ID"
+      }
+    ]
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Horizontal price box plot by the five source category groups. Prices are advertised per listing or variation, not standardised per litre, kilogram or piece. Whiskers use 1.5 IQR; dots beyond them are outliers, not errors established by this chart.",
+  "width": 760,
+  "height": 340,
+  "autosize": {
+    "type": "fit",
+    "contains": "padding",
+    "resize": true
+  },
+  "padding": {
+    "top": 40,
+    "left": 8,
+    "right": 8,
+    "bottom": 8
+  },
+  "title": {
+    "text": [
+      "How widely do prices vary",
+      "across categories?"
+    ],
+    "subtitle": [
+      "Shopee Malaysia | 24 Apr–13 May 2023",
+      "Box = middle 50%; centre line = median. Prices use a logarithmic scale."
+    ],
+    "anchor": "start"
+  },
+  "config": {
+    "font": "Arial",
+    "background": "#ffffff",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "gridColor": "#e6ecf0",
+      "domainColor": "#bdc8d2",
+      "tickColor": "#bdc8d2",
+      "titlePadding": 10
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "symbolStrokeWidth": 0
+    },
+    "title": {
+      "fontSize": 20,
+      "color": "#172b46",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#536174",
+      "anchor": "start",
+      "offset": 16
+    }
+  },
+  "data": {
+    "url": "data/shopee_household_2023.csv",
+    "format": {
+      "type": "csv",
+      "parse": {
+        "price_actual": "number",
+        "price_ori": "number",
+        "item_rating": "number",
+        "rating_count": "number"
+      }
+    }
+  },
+  "transform": [
+    {
+      "filter": "isValid(datum.price_actual) && datum.price_actual > 0"
+    }
+  ],
+  "mark": {
+    "type": "boxplot",
+    "extent": 1.5,
+    "size": 24,
+    "median": {
+      "color": "#172b46",
+      "strokeWidth": 2
+    },
+    "outliers": {
+      "filled": true,
+      "size": 22,
+      "opacity": 0.7
+    }
+  },
+  "encoding": {
+    "x": {
+      "field": "price_actual",
+      "type": "quantitative",
+      "title": "Listed price (RM, logarithmic scale)",
+      "scale": {
+        "type": "log",
+        "domain": [
+          0.05,
+          12000
+        ]
+      },
+      "axis": {
+        "values": [
+          0.1,
+          1,
+          10,
+          100,
+          1000,
+          10000
+        ],
+        "labelExpr": "'RM' + format(datum.value, '~g')"
+      }
+    },
+    "y": {
+      "field": "source_category_group",
+      "type": "nominal",
+      "title": null,
+      "sort": [
+        "Housekeeping & Laundry",
+        "Household Supplies",
+        "Home Storage & Organization",
+        "Kitchen Storage",
+        "Kitchen & Dining"
+      ],
+      "axis": {
+        "labelLimit": 260
+      }
+    },
+    "color": {
+      "field": "topic_group",
+      "type": "nominal",
+      "scale": {
+        "domain": [
+          "Cleaning supplies",
+          "Storage products",
+          "Kitchen essentials"
+        ],
+        "range": [
+          "#17857c",
+          "#8266b2",
+          "#ce7b22"
+        ]
+      },
+      "legend": null
+    },
+    "tooltip": [
+      {
+        "field": "source_category_group",
+        "type": "nominal",
+        "title": "Category group"
+      }
+    ]
+  }
+}

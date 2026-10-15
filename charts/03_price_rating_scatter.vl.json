@@ -1,0 +1,215 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Price-versus-rating scatter plot of positive-price household listings. Each point is one listing; no coordinate jitter is applied. A log price scale preserves the unusually wide source price range without treating extreme advertised prices as typical. Association does not establish product quality or causation.",
+  "width": 760,
+  "height": 520,
+  "autosize": {
+    "type": "fit",
+    "contains": "padding",
+    "resize": true
+  },
+  "padding": {
+    "top": 40,
+    "left": 8,
+    "right": 8,
+    "bottom": 8
+  },
+  "title": {
+    "text": [
+      "Are higher-priced listings",
+      "rated higher?"
+    ],
+    "subtitle": [
+      "Shopee Malaysia | 24 Apr–13 May 2023",
+      "Price uses a logarithmic scale. Ratings are shown from 4 to 5."
+    ],
+    "anchor": "start"
+  },
+  "config": {
+    "font": "Arial",
+    "background": "#ffffff",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "gridColor": "#e6ecf0",
+      "domainColor": "#bdc8d2",
+      "tickColor": "#bdc8d2",
+      "titlePadding": 10
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "symbolStrokeWidth": 0
+    },
+    "title": {
+      "fontSize": 20,
+      "color": "#172b46",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#536174",
+      "anchor": "start",
+      "offset": 16
+    }
+  },
+  "data": {
+    "url": "data/shopee_household_2023.csv",
+    "format": {
+      "type": "csv",
+      "parse": {
+        "price_actual": "number",
+        "price_ori": "number",
+        "item_rating": "number",
+        "rating_count": "number"
+      }
+    }
+  },
+  "transform": [
+    {
+      "filter": "isValid(datum.item_rating) && datum.item_rating >= 1 && datum.item_rating <= 5"
+    },
+    {
+      "filter": "isValid(datum.price_actual) && datum.price_actual > 0"
+    }
+  ],
+  "params": [
+    {
+      "name": "groupHighlight",
+      "select": {
+        "type": "point",
+        "fields": [
+          "topic_group"
+        ],
+        "toggle": "true"
+      },
+      "bind": "legend"
+    }
+  ],
+  "mark": {
+    "type": "point",
+    "filled": true,
+    "size": 52,
+    "stroke": "#ffffff",
+    "strokeWidth": 0.5
+  },
+  "encoding": {
+    "x": {
+      "field": "price_actual",
+      "type": "quantitative",
+      "title": "Listed price (RM, logarithmic scale)",
+      "scale": {
+        "type": "log",
+        "domain": [
+          0.05,
+          12000
+        ]
+      },
+      "axis": {
+        "values": [
+          0.1,
+          1,
+          10,
+          100,
+          1000,
+          10000
+        ],
+        "labelExpr": "'RM' + format(datum.value, '~g')"
+      }
+    },
+    "y": {
+      "field": "item_rating",
+      "type": "quantitative",
+      "title": "Rating out of 5 (displayed range: 4–5)",
+      "scale": {
+        "domain": [
+          4,
+          5
+        ],
+        "zero": false
+      },
+      "axis": {
+        "tickCount": 6,
+        "format": ".1f"
+      }
+    },
+    "color": {
+      "field": "topic_group",
+      "type": "nominal",
+      "scale": {
+        "domain": [
+          "Cleaning supplies",
+          "Storage products",
+          "Kitchen essentials"
+        ],
+        "range": [
+          "#17857c",
+          "#8266b2",
+          "#ce7b22"
+        ]
+      },
+      "legend": {
+        "title": "Product group",
+        "orient": "top",
+        "direction": "horizontal",
+        "columns": 3,
+        "labelLimit": 400
+      }
+    },
+    "opacity": {
+      "condition": {
+        "param": "groupHighlight",
+        "value": 0.8
+      },
+      "value": 0.13
+    },
+    "tooltip": [
+      {
+        "field": "title",
+        "type": "nominal",
+        "title": "Listing"
+      },
+      {
+        "field": "source_category_group",
+        "type": "nominal",
+        "title": "Category group"
+      },
+      {
+        "field": "product_category",
+        "type": "nominal",
+        "title": "Detailed category"
+      },
+      {
+        "field": "price_actual",
+        "type": "quantitative",
+        "title": "Listed price (RM)",
+        "format": ".2f"
+      },
+      {
+        "field": "item_rating",
+        "type": "quantitative",
+        "title": "Rating out of 5",
+        "format": ".1f"
+      },
+      {
+        "field": "total_rating",
+        "type": "nominal",
+        "title": "Rating count (source)"
+      },
+      {
+        "field": "w_date",
+        "type": "nominal",
+        "title": "Observed on"
+      },
+      {
+        "field": "product_id",
+        "type": "nominal",
+        "title": "Listing ID"
+      }
+    ]
+  }
+}

@@ -1,0 +1,648 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v6.json",
+  "description": "Unique household listings in the published Shopee Malaysia sample, 24 April–13 May 2023. Latest observed row per shop/item ID. Area represents sample listing count, not purchases, popularity or market share. Project groups combine the five selected source category groups.",
+  "width": 900,
+  "height": 540,
+  "padding": {
+    "top": 104,
+    "right": 8,
+    "bottom": 45,
+    "left": 8
+  },
+  "autosize": {
+    "type": "none",
+    "contains": "padding",
+    "resize": true
+  },
+  "background": "#ffffff",
+  "title": {
+    "text": {
+      "signal": "width < 600 ? ['Household products', 'in the Shopee sample'] : 'Household products in the Shopee sample'"
+    },
+    "subtitle": [
+      "Shopee Malaysia | 24 Apr–13 May 2023",
+      "Area = distinct listings. Colour = product group."
+    ],
+    "anchor": "start",
+    "font": "Arial",
+    "fontSize": {
+      "signal": "width < 600 ? 17 : 23"
+    },
+    "fontWeight": "bold",
+    "color": "#172b46",
+    "subtitleFont": "Arial",
+    "subtitleFontSize": 12,
+    "subtitleColor": "#516074",
+    "subtitlePadding": 8,
+    "offset": 16
+  },
+  "signals": [
+    {
+      "name": "focusGroup",
+      "value": "All product groups",
+      "bind": {
+        "input": "select",
+        "name": "Highlight a product group: ",
+        "options": [
+          "All product groups",
+          "Cleaning supplies",
+          "Storage products",
+          "Kitchen essentials"
+        ]
+      }
+    },
+    {
+      "name": "totalProducts",
+      "update": "length(data('totals')) ? data('totals')[0].count : 0"
+    }
+  ],
+  "data": [
+    {
+      "name": "products",
+      "url": "data/shopee_household_2023.csv",
+      "format": {
+        "type": "csv"
+      },
+      "transform": [
+        {
+          "type": "formula",
+          "expr": "datum.source_category_group",
+          "as": "chart_category"
+        }
+      ]
+    },
+    {
+      "name": "totals",
+      "source": "products",
+      "transform": [
+        {
+          "type": "aggregate",
+          "fields": [
+            "product_id"
+          ],
+          "ops": [
+            "distinct"
+          ],
+          "as": [
+            "count"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "groupCounts",
+      "source": "products",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "topic_group"
+          ],
+          "fields": [
+            "product_id"
+          ],
+          "ops": [
+            "distinct"
+          ],
+          "as": [
+            "count"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "categoryCounts",
+      "source": "products",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": [
+            "topic_group",
+            "chart_category"
+          ],
+          "fields": [
+            "product_id",
+            "product_category"
+          ],
+          "ops": [
+            "distinct",
+            "distinct"
+          ],
+          "as": [
+            "count",
+            "source_categories"
+          ]
+        },
+        {
+          "type": "lookup",
+          "from": "groupCounts",
+          "key": "topic_group",
+          "fields": [
+            "topic_group"
+          ],
+          "values": [
+            "count"
+          ],
+          "as": [
+            "group_count"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rootNode",
+      "values": [
+        {
+          "id": "root",
+          "parent": null,
+          "label": "All products",
+          "count": 0,
+          "size": 0,
+          "order": 0
+        }
+      ]
+    },
+    {
+      "name": "groupNodes",
+      "source": "groupCounts",
+      "transform": [
+        {
+          "type": "formula",
+          "expr": "'group|' + datum.topic_group",
+          "as": "id"
+        },
+        {
+          "type": "formula",
+          "expr": "'root'",
+          "as": "parent"
+        },
+        {
+          "type": "formula",
+          "expr": "0",
+          "as": "size"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.topic_group === 'Cleaning supplies' ? 'Cleaning' : datum.topic_group === 'Storage products' ? 'Storage' : 'Kitchen'",
+          "as": "label"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.topic_group === 'Cleaning supplies' ? 0 : datum.topic_group === 'Storage products' ? 1 : 2",
+          "as": "order"
+        }
+      ]
+    },
+    {
+      "name": "categoryNodes",
+      "source": "categoryCounts",
+      "transform": [
+        {
+          "type": "formula",
+          "expr": "'category|' + datum.topic_group + '|' + datum.chart_category",
+          "as": "id"
+        },
+        {
+          "type": "formula",
+          "expr": "'group|' + datum.topic_group",
+          "as": "parent"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.count",
+          "as": "size"
+        },
+        {
+          "type": "formula",
+          "expr": "0",
+          "as": "order"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.chart_category",
+          "as": "label"
+        }
+      ]
+    },
+    {
+      "name": "tree",
+      "source": [
+        "rootNode",
+        "groupNodes",
+        "categoryNodes"
+      ],
+      "transform": [
+        {
+          "type": "stratify",
+          "key": "id",
+          "parentKey": "parent"
+        },
+        {
+          "type": "treemap",
+          "field": "size",
+          "method": "squarify",
+          "sort": {
+            "field": [
+              "data.order",
+              "value"
+            ],
+            "order": [
+              "ascending",
+              "descending"
+            ]
+          },
+          "round": false,
+          "paddingInner": 3,
+          "paddingOuter": 4,
+          "paddingTop": 43,
+          "size": [
+            {
+              "signal": "width"
+            },
+            {
+              "signal": "height"
+            }
+          ],
+          "ratio": 1
+        }
+      ]
+    },
+    {
+      "name": "groupPanels",
+      "source": "tree",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.depth === 1"
+        }
+      ]
+    },
+    {
+      "name": "categoryTiles",
+      "source": "tree",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.depth === 2"
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "groupColour",
+      "type": "ordinal",
+      "domain": [
+        "Cleaning supplies",
+        "Storage products",
+        "Kitchen essentials"
+      ],
+      "range": [
+        "#17857c",
+        "#8266b2",
+        "#ce7b22"
+      ]
+    },
+    {
+      "name": "panelColour",
+      "type": "ordinal",
+      "domain": [
+        "Cleaning supplies",
+        "Storage products",
+        "Kitchen essentials"
+      ],
+      "range": [
+        "#e7f5f3",
+        "#f0eafa",
+        "#fff2df"
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "type": "text",
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "value": 5
+          },
+          "y": {
+            "value": 18
+          },
+          "text": {
+            "signal": "totalProducts + ' distinct listings · ' + length(data('categoryCounts')) + ' source category groups'"
+          },
+          "font": {
+            "value": "Arial"
+          },
+          "fontSize": {
+            "value": 13
+          },
+          "fontWeight": {
+            "value": "bold"
+          },
+          "fill": {
+            "value": "#172b46"
+          },
+          "limit": {
+            "signal": "width - 10"
+          }
+        }
+      }
+    },
+    {
+      "name": "groupBackgrounds",
+      "type": "rect",
+      "from": {
+        "data": "groupPanels"
+      },
+      "encode": {
+        "update": {
+          "x": {
+            "field": "x0"
+          },
+          "y": {
+            "field": "y0"
+          },
+          "x2": {
+            "field": "x1"
+          },
+          "y2": {
+            "field": "y1"
+          },
+          "fill": {
+            "scale": "panelColour",
+            "field": "topic_group"
+          },
+          "stroke": {
+            "scale": "groupColour",
+            "field": "topic_group"
+          },
+          "strokeWidth": {
+            "value": 1
+          },
+          "tooltip": {
+            "signal": "{'Product group': datum.topic_group, 'Unique products': datum.count, 'Share of selected sample': format(datum.count / totalProducts, '.1%')}"
+          }
+        }
+      }
+    },
+    {
+      "name": "tiles",
+      "type": "rect",
+      "from": {
+        "data": "categoryTiles"
+      },
+      "encode": {
+        "update": {
+          "x": {
+            "field": "x0"
+          },
+          "y": {
+            "field": "y0"
+          },
+          "x2": {
+            "field": "x1"
+          },
+          "y2": {
+            "field": "y1"
+          },
+          "fill": {
+            "scale": "groupColour",
+            "field": "topic_group"
+          },
+          "fillOpacity": {
+            "signal": "focusGroup === 'All product groups' || focusGroup === datum.topic_group ? 0.94 : 0.22"
+          },
+          "stroke": {
+            "value": "#ffffff"
+          },
+          "strokeWidth": {
+            "value": 1.5
+          },
+          "tooltip": {
+            "signal": "{'Product group': datum.topic_group, 'Overview category': datum.label, 'Detailed categories combined': datum.source_categories, 'Unique products': datum.count, 'Share of selected sample': format(datum.count / totalProducts, '.1%'), 'Share of product group': format(datum.count / datum.group_count, '.1%')}"
+          }
+        },
+        "hover": {
+          "stroke": {
+            "value": "#172b46"
+          },
+          "strokeWidth": {
+            "value": 2.5
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "groupPanels"
+      },
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "datum.x0 + 9"
+          },
+          "y": {
+            "signal": "datum.y0 + 9"
+          },
+          "text": {
+            "field": "label"
+          },
+          "align": {
+            "value": "left"
+          },
+          "baseline": {
+            "value": "top"
+          },
+          "font": {
+            "value": "Arial"
+          },
+          "fontSize": {
+            "value": 14
+          },
+          "fontWeight": {
+            "value": "bold"
+          },
+          "fill": {
+            "value": "#172b46"
+          },
+          "limit": {
+            "signal": "max(0, datum.x1 - datum.x0 - 18)"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "groupPanels"
+      },
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "datum.x0 + 9"
+          },
+          "y": {
+            "signal": "datum.y0 + 30"
+          },
+          "text": {
+            "signal": "datum.count + ' · ' + format(datum.count / totalProducts, '.1%')"
+          },
+          "align": {
+            "value": "left"
+          },
+          "baseline": {
+            "value": "middle"
+          },
+          "font": {
+            "value": "Arial"
+          },
+          "fontSize": {
+            "value": 11
+          },
+          "fill": {
+            "value": "#35445c"
+          },
+          "limit": {
+            "signal": "max(0, datum.x1 - datum.x0 - 18)"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "categoryTiles"
+      },
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "datum.x0 + 7"
+          },
+          "y": {
+            "signal": "datum.y0 + 7"
+          },
+          "text": {
+            "signal": "datum.label === 'Bathroom & oven cleaners' ? ['Bathroom', '& oven', 'cleaners'] : datum.label === 'Bags & under-bed storage' ? ['Storage', 'bags &', 'under-bed'] : datum.label === 'Dining & accessories' ? ['Dining &', 'accessories'] : datum.label === 'Boxes & baskets' ? ['Boxes &', 'baskets'] : split(datum.label, ' ')"
+          },
+          "align": {
+            "value": "left"
+          },
+          "baseline": {
+            "value": "top"
+          },
+          "font": {
+            "value": "Arial"
+          },
+          "fontSize": {
+            "value": 12
+          },
+          "lineHeight": {
+            "value": 14
+          },
+          "fontWeight": {
+            "value": 500
+          },
+          "fill": {
+            "value": "#172b46"
+          },
+          "limit": {
+            "signal": "max(0, datum.x1 - datum.x0 - 14)"
+          },
+          "opacity": {
+            "signal": "datum.x1 - datum.x0 < 44 || datum.y1 - datum.y0 < length(datum.label === 'Bathroom & oven cleaners' ? ['Bathroom', '& oven', 'cleaners'] : datum.label === 'Bags & under-bed storage' ? ['Storage', 'bags &', 'under-bed'] : datum.label === 'Dining & accessories' ? ['Dining &', 'accessories'] : datum.label === 'Boxes & baskets' ? ['Boxes &', 'baskets'] : split(datum.label, ' ')) * 14 + 29 ? 0 : focusGroup === 'All product groups' || focusGroup === datum.topic_group ? 1 : 0.4"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "categoryTiles"
+      },
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "signal": "datum.x0 + 7"
+          },
+          "y": {
+            "signal": "datum.y1 - 7"
+          },
+          "text": {
+            "field": "count"
+          },
+          "align": {
+            "value": "left"
+          },
+          "baseline": {
+            "value": "bottom"
+          },
+          "font": {
+            "value": "Arial"
+          },
+          "fontSize": {
+            "value": 13
+          },
+          "fill": {
+            "value": "#35445c"
+          },
+          "limit": {
+            "signal": "max(0, datum.x1 - datum.x0 - 14)"
+          },
+          "opacity": {
+            "signal": "datum.x1 - datum.x0 < 44 || datum.y1 - datum.y0 < 28 ? 0 : focusGroup === 'All product groups' || focusGroup === datum.topic_group ? 1 : 0.4"
+          },
+          "fontWeight": {
+            "value": "bold"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "interactive": false,
+      "encode": {
+        "update": {
+          "x": {
+            "value": 5
+          },
+          "y": {
+            "signal": "height + 31"
+          },
+          "text": {
+            "value": "Counts describe the selected sample, not sales or market share."
+          },
+          "font": {
+            "value": "Arial"
+          },
+          "fontSize": {
+            "value": 10
+          },
+          "fill": {
+            "value": "#516074"
+          },
+          "limit": {
+            "signal": "width - 10"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "text": {
+      "font": "Arial"
+    },
+    "style": {
+      "guide-label": {
+        "font": "Arial"
+      }
+    }
+  }
+}

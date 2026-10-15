@@ -1,0 +1,214 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Median observed RM/L for Ajax Fabuloso lavender 2 L, Mr Muscle lavender 2 L and Dettol lavender 2.5 L. Each outlet contributes one median before the national sample median. Different formulations can have different performance; this chart compares price per litre only.",
+  "width": 760,
+  "height": 250,
+  "autosize": {
+    "type": "fit",
+    "contains": "padding",
+    "resize": true
+  },
+  "padding": {
+    "top": 40,
+    "left": 8,
+    "right": 8,
+    "bottom": 8
+  },
+  "title": {
+    "text": [
+      "Multipurpose-cleaner prices",
+      "per litre"
+    ],
+    "subtitle": [
+      "PriceCatcher | observations on 12 Oct 2026",
+      "Named lavender products; compare pack prices after standardising volume."
+    ],
+    "anchor": "start"
+  },
+  "config": {
+    "font": "Arial",
+    "background": "#ffffff",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "gridColor": "#e6ecf0",
+      "domainColor": "#bdc8d2",
+      "tickColor": "#bdc8d2",
+      "titlePadding": 10
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "symbolStrokeWidth": 0
+    },
+    "title": {
+      "fontSize": 20,
+      "color": "#172b46",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#536174",
+      "anchor": "start",
+      "offset": 16
+    }
+  },
+  "data": {
+    "url": "data/pricecatcher_household_oct2026.csv",
+    "format": {
+      "type": "csv",
+      "parse": {
+        "premise_code": "number",
+        "item_code": "number",
+        "price": "number"
+      }
+    }
+  },
+  "transform": [
+    {
+      "filter": "indexof([1998,1999,2000],datum.item_code)>=0"
+    },
+    {
+      "lookup": "item_code",
+      "from": {
+        "data": {
+          "url": "data/lookup_item.csv",
+          "format": {
+            "type": "csv",
+            "parse": {
+              "item_code": "number"
+            }
+          }
+        },
+        "key": "item_code",
+        "fields": [
+          "item",
+          "unit"
+        ]
+      }
+    },
+    {
+      "calculate": "datum.item_code === 1998 ? 'Dettol lavender · 2.5 L' : datum.item_code === 1999 ? 'Mr Muscle lavender · 2 L' : 'Ajax Fabuloso lavender · 2 L'",
+      "as": "product_label"
+    },
+    {
+      "calculate": "datum.item_code===1998 ? 2.5 : 2",
+      "as": "pack_litres"
+    },
+    {
+      "aggregate": [
+        {
+          "op": "median",
+          "field": "price",
+          "as": "outlet_pack_rm"
+        }
+      ],
+      "groupby": [
+        "item_code",
+        "premise_code",
+        "product_label",
+        "pack_litres",
+        "item",
+        "unit"
+      ]
+    },
+    {
+      "calculate": "datum.outlet_pack_rm / datum.pack_litres",
+      "as": "outlet_rm_litre"
+    },
+    {
+      "aggregate": [
+        {
+          "op": "median",
+          "field": "outlet_rm_litre",
+          "as": "median_rm_litre"
+        },
+        {
+          "op": "count",
+          "as": "n_outlets"
+        }
+      ],
+      "groupby": [
+        "product_label",
+        "item",
+        "unit"
+      ]
+    }
+  ],
+  "encoding": {
+    "y": {
+      "field": "product_label",
+      "type": "nominal",
+      "sort": {
+        "field": "median_rm_litre",
+        "order": "ascending"
+      },
+      "title": null,
+      "axis": {
+        "labelLimit": 300
+      }
+    },
+    "x": {
+      "field": "median_rm_litre",
+      "type": "quantitative",
+      "title": "Median observed price (RM per litre)",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ".2f"
+      }
+    },
+    "tooltip": [
+      {
+        "field": "item",
+        "title": "Official item name"
+      },
+      {
+        "field": "unit",
+        "title": "Official pack unit"
+      },
+      {
+        "field": "median_rm_litre",
+        "type": "quantitative",
+        "title": "Median RM/L",
+        "format": ".2f"
+      },
+      {
+        "field": "n_outlets",
+        "type": "quantitative",
+        "title": "Sampled outlets"
+      }
+    ]
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "color": "#17857c",
+        "cornerRadiusEnd": 4,
+        "size": 36
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "dx": 6,
+        "fontWeight": "bold",
+        "color": "#172b46"
+      },
+      "encoding": {
+        "text": {
+          "field": "median_rm_litre",
+          "type": "quantitative",
+          "format": ".2f"
+        }
+      }
+    }
+  ]
+}
