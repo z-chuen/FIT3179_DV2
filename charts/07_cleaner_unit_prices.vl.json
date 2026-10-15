@@ -1,18 +1,18 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "description": "Median observed RM/L for Ajax Fabuloso lavender 2 L, Mr Muscle lavender 2 L and Dettol lavender 2.5 L. Each outlet contributes one median before the national sample median. Different formulations can have different performance; this chart compares price per litre only.",
-  "width": 760,
-  "height": 250,
+  "width": 900,
+  "height": 440,
   "autosize": {
     "type": "fit",
     "contains": "padding",
-    "resize": true
+    "resize": false
   },
   "padding": {
-    "top": 40,
+    "top": 36,
     "left": 8,
-    "right": 8,
-    "bottom": 8
+    "right": 12,
+    "bottom": 10
   },
   "title": {
     "text": [
@@ -20,10 +20,11 @@
       "per litre"
     ],
     "subtitle": [
-      "PriceCatcher | observations on 12 Oct 2026",
-      "Named lavender products; compare pack prices after standardising volume."
+      "PriceCatcher · observations on 12 Oct 2026",
+      "Lavender cleaners; prices standardised to volume."
     ],
-    "anchor": "start"
+    "anchor": "start",
+    "frame": "bounds"
   },
   "config": {
     "font": "Arial",
@@ -32,14 +33,16 @@
       "stroke": null
     },
     "axis": {
-      "labelFontSize": 12,
-      "titleFontSize": 12,
-      "labelColor": "#465467",
+      "labelFontSize": 14,
+      "titleFontSize": 14,
+      "labelColor": "#172b46",
       "titleColor": "#172b46",
-      "gridColor": "#e6ecf0",
+      "gridColor": "#d9e2eb",
       "domainColor": "#bdc8d2",
       "tickColor": "#bdc8d2",
-      "titlePadding": 10
+      "titlePadding": 15,
+      "domain": false,
+      "ticks": false
     },
     "legend": {
       "labelFontSize": 12,
@@ -49,12 +52,12 @@
       "symbolStrokeWidth": 0
     },
     "title": {
-      "fontSize": 20,
+      "fontSize": 22,
       "color": "#172b46",
       "subtitleFontSize": 12,
-      "subtitleColor": "#536174",
+      "subtitleColor": "#425466",
       "anchor": "start",
-      "offset": 16
+      "offset": 20
     }
   },
   "data": {
@@ -143,25 +146,63 @@
     "y": {
       "field": "product_label",
       "type": "nominal",
-      "sort": {
-        "field": "median_rm_litre",
-        "order": "ascending"
-      },
+      "sort": [
+        "Mr Muscle lavender · 2 L",
+        "Ajax Fabuloso lavender · 2 L",
+        "Dettol lavender · 2.5 L"
+      ],
       "title": null,
       "axis": {
-        "labelLimit": 300
+        "labelExpr": "split(replace(datum.label, ' lavender', ''), ' · ')",
+        "labelFontSize": 14,
+        "labelFontWeight": "bold",
+        "labelLineHeight": 19,
+        "labelLimit": 160,
+        "labelPadding": 14,
+        "labelOverlap": false,
+        "labelColor": "#172b46",
+        "ticks": false,
+        "domain": false
+      },
+      "scale": {
+        "paddingInner": 0.45,
+        "paddingOuter": 0.3
       }
     },
     "x": {
       "field": "median_rm_litre",
       "type": "quantitative",
-      "title": "Median observed price (RM per litre)",
+      "title": [
+        "Median observed price",
+        "(RM per litre)"
+      ],
       "scale": {
-        "zero": true
+        "zero": true,
+        "domain": [
+          0,
+          10
+        ],
+        "nice": false
       },
       "axis": {
-        "format": ".2f"
-      }
+        "format": ".0f",
+        "values": [
+          0,
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        "labelPadding": 9,
+        "titleLineHeight": 19,
+        "titleFontSize": 14,
+        "grid": true,
+        "gridColor": "#d9e2eb",
+        "domain": false,
+        "ticks": false
+      },
+      "stack": null
     },
     "tooltip": [
       {
@@ -189,26 +230,51 @@
     {
       "mark": {
         "type": "bar",
-        "color": "#17857c",
-        "cornerRadiusEnd": 4,
-        "size": 36
+        "cornerRadiusEnd": 5,
+        "size": 42
+      },
+      "encoding": {
+        "color": {
+          "field": "product_label",
+          "type": "nominal",
+          "scale": {
+            "domain": [
+              "Mr Muscle lavender · 2 L",
+              "Ajax Fabuloso lavender · 2 L",
+              "Dettol lavender · 2.5 L"
+            ],
+            "range": [
+              "#1D5A96",
+              "#A94F05",
+              "#006D62"
+            ]
+          },
+          "legend": null
+        }
       }
     },
     {
       "mark": {
         "type": "text",
-        "align": "left",
-        "dx": 6,
+        "align": "right",
+        "baseline": "middle",
+        "dx": -11,
+        "fontSize": 16,
         "fontWeight": "bold",
-        "color": "#172b46"
+        "color": "#ffffff"
       },
       "encoding": {
         "text": {
-          "field": "median_rm_litre",
-          "type": "quantitative",
-          "format": ".2f"
+          "field": "price_label",
+          "type": "nominal"
         }
-      }
+      },
+      "transform": [
+        {
+          "calculate": "'RM ' + format(datum.median_rm_litre, '.2f')",
+          "as": "price_label"
+        }
+      ]
     }
   ]
 }
