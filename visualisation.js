@@ -86,7 +86,7 @@ async function loadChart(file, i) {
     if(file.startsWith('01_')&&width<650)spec.height=620;
     if(file.match(/^(09|10|11)_/))spec.height=width<650?410:500;
     element.innerHTML='';
-    const result=await vegaEmbed(element,spec,{renderer:'svg',actions:false,loader});
+    const result=await vegaEmbed(element,spec,{renderer:'svg',actions:true,loader});
     window.chartViews[id]=result.view;
     element.style.overflowX='auto';
     const svg=element.querySelector('svg');
