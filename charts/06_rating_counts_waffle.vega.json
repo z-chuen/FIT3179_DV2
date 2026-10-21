@@ -46,7 +46,7 @@
   "data": [
     {
       "name": "products",
-      "url": "data/shopee_household_2023.csv",
+      "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/shopee_household_2023.csv",
       "format": {
         "type": "csv",
         "parse": {

@@ -61,7 +61,7 @@
     }
   },
   "data": {
-    "url": "data/pricecatcher_household_oct2026.csv",
+    "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/pricecatcher_household_oct2026.csv",
     "format": {
       "type": "csv",
       "parse": {
@@ -79,7 +79,7 @@
       "lookup": "item_code",
       "from": {
         "data": {
-          "url": "data/lookup_item.csv",
+          "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/lookup_item.csv",
           "format": {
             "type": "csv",
             "parse": {

@@ -68,7 +68,7 @@
   "data": [
     {
       "name": "items",
-      "url": "data/lookup_item.csv",
+      "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/lookup_item.csv",
       "format": {
         "type": "csv",
         "parse": {
@@ -78,7 +78,7 @@
     },
     {
       "name": "premises",
-      "url": "data/lookup_premise.csv",
+      "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/lookup_premise.csv",
       "format": {
         "type": "csv",
         "parse": {
@@ -88,7 +88,7 @@
     },
     {
       "name": "prices",
-      "url": "data/pricecatcher_household_oct2026.csv",
+      "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/pricecatcher_household_oct2026.csv",
       "format": {
         "type": "csv",
         "parse": {
@@ -226,7 +226,7 @@
     },
     {
       "name": "boundaries",
-      "url": "data/malaysia_states.geojson",
+      "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/malaysia_states.geojson",
       "format": {
         "type": "json",
         "property": "features"
@@ -251,7 +251,7 @@
     },
     {
       "name": "anchors",
-      "url": "data/state_display_anchors.csv",
+      "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/state_display_anchors.csv",
       "format": {
         "type": "csv",
         "parse": {
