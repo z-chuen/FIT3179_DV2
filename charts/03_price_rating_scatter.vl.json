@@ -21,7 +21,7 @@
     ],
     "subtitle": [
       "Shopee Malaysia | 24 Apr–13 May 2023",
-      "Price uses a logarithmic scale. Ratings are shown from 4 to 5."
+      "Price uses a logarithmic scale. Ratings are shown from 0 to 5."
     ],
     "anchor": "start"
   },
@@ -58,7 +58,7 @@
     }
   },
   "data": {
-    "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/shopee_household_2023.csv",
+    "url": "data/shopee_household_2023.csv",
     "format": {
       "type": "csv",
       "parse": {
@@ -124,17 +124,17 @@
     "y": {
       "field": "item_rating",
       "type": "quantitative",
-      "title": "Rating out of 5 (displayed range: 4–5)",
+      "title": "Rating out of 5",
       "scale": {
         "domain": [
-          4,
+          0,
           5
         ],
-        "zero": false
+        "zero": true
       },
       "axis": {
-        "tickCount": 6,
-        "format": ".1f"
+        "values": [0, 1, 2, 3, 4, 5],
+        "format": ".0f"
       }
     },
     "color": {

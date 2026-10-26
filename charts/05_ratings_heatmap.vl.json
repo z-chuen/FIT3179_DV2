@@ -1,71 +1,39 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-  "description": "Category-by-rating-band heatmap. Colour and cell labels encode the proportion of listings in each source category group. Empty bands are explicitly filled with zero, and the denominator is all valid-rated listings in that group.",
-  "width": 760,
-  "height": 320,
+  "description": "100% stacked bars show the share of sampled household listings in each overall-rating group within five product subcategories. Each listing counts once. These are listing-level ratings, not individual reviews.",
+  "width": 900,
+  "height": {
+    "step": 72
+  },
   "autosize": {
-    "type": "fit",
+    "type": "fit-x",
     "contains": "padding",
-    "resize": true
+    "resize": false
   },
   "padding": {
-    "top": 40,
+    "top": 20,
     "left": 8,
-    "right": 8,
-    "bottom": 8
+    "right": 16,
+    "bottom": 14
   },
   "title": {
     "text": [
-      "How are ratings distributed",
-      "within each category?"
+      "Rating distribution by",
+      "product subcategory"
     ],
     "subtitle": [
       "Shopee Malaysia | 24 Apr–13 May 2023",
-      "Each row totals 100%. Hover for listing counts."
+      "Each bar totals 100%. n = listings in group."
     ],
-    "anchor": "start"
-  },
-  "config": {
-    "font": "Arial",
-    "background": "#ffffff",
-    "view": {
-      "stroke": null
-    },
-    "axis": {
-      "labelFontSize": 12,
-      "titleFontSize": 12,
-      "labelColor": "#465467",
-      "titleColor": "#172b46",
-      "gridColor": "#e6ecf0",
-      "domainColor": "#bdc8d2",
-      "tickColor": "#bdc8d2",
-      "titlePadding": 10
-    },
-    "legend": {
-      "labelFontSize": 12,
-      "titleFontSize": 12,
-      "labelColor": "#465467",
-      "titleColor": "#172b46",
-      "symbolStrokeWidth": 0
-    },
-    "title": {
-      "fontSize": 20,
-      "color": "#172b46",
-      "subtitleFontSize": 12,
-      "subtitleColor": "#536174",
-      "anchor": "start",
-      "offset": 16
-    }
+    "anchor": "start",
+    "frame": "bounds"
   },
   "data": {
-    "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/shopee_household_2023.csv",
+    "url": "data/shopee_household_2023.csv",
     "format": {
       "type": "csv",
       "parse": {
-        "price_actual": "number",
-        "price_ori": "number",
-        "item_rating": "number",
-        "rating_count": "number"
+        "item_rating": "number"
       }
     }
   },
@@ -74,7 +42,7 @@
       "filter": "isValid(datum.item_rating) && datum.item_rating >= 1 && datum.item_rating <= 5"
     },
     {
-      "calculate": "datum.item_rating < 4.5 ? 'Below 4.5' : datum.item_rating < 4.8 ? '4.5–<4.8' : datum.item_rating < 5 ? '4.8–<5' : '5.0'",
+      "calculate": "datum.item_rating < 4.8 ? 'Below 4.8' : datum.item_rating < 4.9 ? '4.8' : datum.item_rating < 5 ? '4.9' : '5.0'",
       "as": "rating_band"
     },
     {
@@ -93,9 +61,9 @@
       "impute": "n",
       "key": "rating_band",
       "keyvals": [
-        "Below 4.5",
-        "4.5–<4.8",
-        "4.8–<5",
+        "Below 4.8",
+        "4.8",
+        "4.9",
         "5.0"
       ],
       "groupby": [
@@ -118,61 +86,89 @@
     {
       "calculate": "datum.n / datum.category_n",
       "as": "share"
+    },
+    {
+      "calculate": "indexof(['Below 4.8', '4.8', '4.9', '5.0'], datum.rating_band)",
+      "as": "band_order"
+    },
+    {
+      "calculate": "indexof(['Housekeeping & Laundry', 'Household Supplies', 'Home Storage & Organization', 'Kitchen Storage', 'Kitchen & Dining'], datum.source_category_group)",
+      "as": "category_order"
+    },
+    {
+      "calculate": "(datum.source_category_group === 'Housekeeping & Laundry' ? 'Housekeeping|& laundry' : datum.source_category_group === 'Household Supplies' ? 'Household|supplies' : datum.source_category_group === 'Home Storage & Organization' ? 'Home storage|& organisation' : datum.source_category_group === 'Kitchen Storage' ? 'Kitchen|storage' : 'Kitchen|& dining') + '|n = ' + datum.category_n",
+      "as": "category_label"
+    },
+    {
+      "stack": "n",
+      "groupby": [
+        "source_category_group"
+      ],
+      "sort": [
+        {
+          "field": "band_order",
+          "order": "ascending"
+        }
+      ],
+      "offset": "normalize",
+      "as": [
+        "share_start",
+        "share_end"
+      ]
+    },
+    {
+      "calculate": "(datum.share_start + datum.share_end) / 2",
+      "as": "share_mid"
     }
   ],
   "encoding": {
-    "x": {
-      "field": "rating_band",
-      "type": "ordinal",
-      "sort": [
-        "Below 4.5",
-        "4.5–<4.8",
-        "4.8–<5",
-        "5.0"
-      ],
-      "title": "Customer rating band",
-      "axis": {
-        "labelAngle": 0
-      }
-    },
     "y": {
-      "field": "source_category_group",
+      "field": "category_label",
       "type": "nominal",
-      "sort": [
-        "Housekeeping & Laundry",
-        "Household Supplies",
-        "Home Storage & Organization",
-        "Kitchen Storage",
-        "Kitchen & Dining"
-      ],
       "title": null,
+      "sort": {
+        "field": "category_order",
+        "op": "min",
+        "order": "ascending"
+      },
       "axis": {
-        "labelLimit": 260
+        "labelExpr": "split(datum.label, '|')",
+        "labelFontSize": 12,
+        "labelFontWeight": "bold",
+        "labelLineHeight": 16,
+        "labelLimit": 160,
+        "labelPadding": 12,
+        "ticks": false,
+        "domain": false
       }
     },
     "tooltip": [
       {
         "field": "source_category_group",
-        "title": "Category group"
+        "type": "nominal",
+        "title": "Product subcategory"
       },
       {
         "field": "rating_band",
-        "title": "Rating band"
+        "type": "nominal",
+        "title": "Overall rating"
       },
       {
         "field": "n",
         "type": "quantitative",
-        "title": "Listings"
+        "title": "Listings in rating group",
+        "format": "d"
       },
       {
         "field": "category_n",
         "type": "quantitative",
-        "title": "Listings in category"
+        "title": "Listings in subcategory",
+        "format": "d"
       },
       {
         "field": "share",
         "type": "quantitative",
-        "title": "Share of category",
+        "title": "Share of subcategory",
         "format": ".1%"
       }
     ]
@@ -180,26 +176,72 @@
   "layer": [
     {
       "mark": {
-        "type": "rect",
-        "stroke": "#ffffff",
-        "strokeWidth": 2
+        "type": "bar",
+        "height": 42,
+        "stroke": "white",
+        "strokeWidth": 1
       },
       "encoding": {
-        "color": {
-          "field": "share",
+        "x": {
+          "field": "share_start",
           "type": "quantitative",
+          "title": "Share of listings",
           "scale": {
             "domain": [
               0,
               1
             ],
-            "scheme": "tealblues"
+            "zero": true,
+            "nice": false
+          },
+          "axis": {
+            "values": [
+              0,
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "format": ".0%",
+            "grid": true,
+            "labelOverlap": true
+          }
+        },
+        "x2": {
+          "field": "share_end"
+        },
+        "color": {
+          "field": "rating_band",
+          "type": "ordinal",
+          "sort": [
+            "Below 4.8",
+            "4.8",
+            "4.9",
+            "5.0"
+          ],
+          "scale": {
+            "domain": [
+              "Below 4.8",
+              "4.8",
+              "4.9",
+              "5.0"
+            ],
+            "range": [
+              "#e2e8f0",
+              "#9ecae1",
+              "#1d6fa5",
+              "#083e6b"
+            ]
           },
           "legend": {
-            "title": "Share of category",
-            "format": ".0%",
+            "title": "Rating out of 5",
+            "titleLimit": 200,
             "orient": "bottom",
-            "gradientLength": 230
+            "direction": "horizontal",
+            "columns": 2,
+            "labelLimit": 120,
+            "columnPadding": 24,
+            "symbolType": "square"
           }
         }
       }
@@ -207,23 +249,64 @@
     {
       "mark": {
         "type": "text",
-        "fontSize": 14,
-        "fontWeight": "bold"
+        "fontSize": 12,
+        "fontWeight": "bold",
+        "baseline": "middle"
       },
       "encoding": {
+        "x": {
+          "field": "share_mid",
+          "type": "quantitative"
+        },
         "text": {
-          "field": "share",
-          "type": "quantitative",
-          "format": ".0%"
+          "type": "nominal",
+          "field": "percentage_label"
         },
         "color": {
           "condition": {
-            "test": "datum.share > 0.55",
-            "value": "#ffffff"
+            "test": "datum.band_order >= 2",
+            "value": "white"
           },
           "value": "#172b46"
         }
-      }
+      },
+      "transform": [
+        {
+          "calculate": "datum.share * width >= 48 ? format(datum.share, '.1%') : ''",
+          "as": "percentage_label"
+        }
+      ]
     }
-  ]
+  ],
+  "config": {
+    "font": "Arial",
+    "background": "white",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "gridColor": "#e6ecf0",
+      "domainColor": "#bdc8d2",
+      "tickColor": "#bdc8d2",
+      "titlePadding": 14
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "offset": 18
+    },
+    "title": {
+      "fontSize": 20,
+      "color": "#172b46",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#536174",
+      "offset": 18
+    }
+  }
 }
