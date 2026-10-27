@@ -1,29 +1,31 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-  "description": "Price-versus-rating scatter plot of positive-price household listings. Each point is one listing; no coordinate jitter is applied. A log price scale preserves the unusually wide source price range without treating extreme advertised prices as typical. Association does not establish product quality or causation.",
+  "description": "Price-versus-rating scatter plot of positive-price household listings. Each point is one listing; no coordinate jitter is applied. A logarithmic price scale shows the wide range among retained sale listings. Association does not establish product quality or causation. Price comparisons exclude five source-reviewed gift/redemption/non-sale listings by product_id: 44437739.12410830021, 52784309.18045431232, 52784309.22224842773, 62781995.22828814214, 635979077.21639543747. This is a listing-type rule, not a price cutoff; genuine sale bundles mentioning free gifts remain included. The shared CSV is unchanged. The 343 retained positive prices range from RM0.06 to RM299.",
   "width": 760,
-  "height": 520,
+  "height": 400,
   "autosize": {
     "type": "fit",
     "contains": "padding",
-    "resize": true
+    "resize": false
   },
   "padding": {
-    "top": 40,
+    "top": 12,
     "left": 8,
-    "right": 8,
-    "bottom": 8
+    "right": 12,
+    "bottom": 12
   },
   "title": {
-    "text": [
-      "Are higher-priced listings",
-      "rated higher?"
-    ],
+    "text": "Shopee Malaysia | 2023",
     "subtitle": [
-      "Shopee Malaysia | 24 Apr–13 May 2023",
-      "Price uses a logarithmic scale. Ratings are shown from 0 to 5."
+      "24 Apr–13 May | n = 343",
+      "5 gift listings excluded"
     ],
-    "anchor": "start"
+    "anchor": "start",
+    "fontSize": 12,
+    "fontWeight": "normal",
+    "subtitleFontSize": 11,
+    "subtitlePadding": 4,
+    "offset": 14
   },
   "config": {
     "font": "Arial",
@@ -39,7 +41,8 @@
       "gridColor": "#e6ecf0",
       "domainColor": "#bdc8d2",
       "tickColor": "#bdc8d2",
-      "titlePadding": 10
+      "titlePadding": 12,
+      "labelPadding": 5
     },
     "legend": {
       "labelFontSize": 12,
@@ -49,9 +52,9 @@
       "symbolStrokeWidth": 0
     },
     "title": {
-      "fontSize": 20,
+      "fontSize": 12,
       "color": "#172b46",
-      "subtitleFontSize": 12,
+      "subtitleFontSize": 11,
       "subtitleColor": "#536174",
       "anchor": "start",
       "offset": 16
@@ -75,6 +78,9 @@
     },
     {
       "filter": "isValid(datum.price_actual) && datum.price_actual > 0"
+    },
+    {
+      "filter": "indexof([\"44437739.12410830021\",\"52784309.18045431232\",\"52784309.22224842773\",\"62781995.22828814214\",\"635979077.21639543747\"], datum.product_id) < 0"
     }
   ],
   "params": [
@@ -93,7 +99,7 @@
   "mark": {
     "type": "point",
     "filled": true,
-    "size": 52,
+    "size": 46,
     "stroke": "#ffffff",
     "strokeWidth": 0.5
   },
@@ -101,13 +107,14 @@
     "x": {
       "field": "price_actual",
       "type": "quantitative",
-      "title": "Listed price (RM, logarithmic scale)",
+      "title": "Price (RM, log scale)",
       "scale": {
         "type": "log",
         "domain": [
           0.05,
-          12000
-        ]
+          400
+        ],
+        "nice": false
       },
       "axis": {
         "values": [
@@ -115,10 +122,15 @@
           1,
           10,
           100,
-          1000,
-          10000
+          300
         ],
-        "labelExpr": "'RM' + format(datum.value, '~g')"
+        "labelExpr": "'RM' + format(datum.value, '~g')",
+        "labelOverlap": "greedy",
+        "labelSeparation": 8,
+        "labelFlush": 20,
+        "labelFontSize": 11,
+        "titleFontSize": 12,
+        "grid": true
       }
     },
     "y": {
@@ -133,7 +145,14 @@
         "zero": true
       },
       "axis": {
-        "values": [0, 1, 2, 3, 4, 5],
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
         "format": ".0f"
       }
     },
@@ -156,8 +175,15 @@
         "title": "Product group",
         "orient": "top",
         "direction": "horizontal",
-        "columns": 3,
-        "labelLimit": 400
+        "columns": {
+          "expr": "width < 460 ? 1 : 3"
+        },
+        "labelLimit": 200,
+        "rowPadding": 5,
+        "columnPadding": 18,
+        "offset": 12,
+        "titleFontSize": 11,
+        "labelFontSize": 11
       }
     },
     "opacity": {
@@ -172,6 +198,11 @@
         "field": "title",
         "type": "nominal",
         "title": "Listing"
+      },
+      {
+        "field": "topic_group",
+        "type": "nominal",
+        "title": "Product group"
       },
       {
         "field": "source_category_group",

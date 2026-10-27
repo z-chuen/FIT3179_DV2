@@ -1,29 +1,32 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-  "description": "Horizontal price box plot by the five source category groups. Prices are advertised per listing or variation, not standardised per litre, kilogram or piece. Whiskers use 1.5 IQR; dots beyond them are outliers, not errors established by this chart.",
+  "description": "Horizontal price box plot by the five source category groups. Prices are advertised per listing or variation, not standardised per litre, kilogram or piece. Whiskers use 1.5 IQR; dots beyond them are outliers, not errors established by this chart. Price comparisons exclude five source-reviewed gift/redemption/non-sale listings by product_id: 44437739.12410830021, 52784309.18045431232, 52784309.22224842773, 62781995.22828814214, 635979077.21639543747. This is a listing-type rule, not a price cutoff; genuine sale bundles mentioning free gifts remain included. The shared CSV is unchanged. The 343 retained positive prices range from RM0.06 to RM299.",
   "width": 760,
-  "height": 340,
+  "height": 360,
   "autosize": {
     "type": "fit",
     "contains": "padding",
-    "resize": true
+    "resize": false
   },
   "padding": {
-    "top": 40,
+    "top": 12,
     "left": 8,
-    "right": 8,
-    "bottom": 8
+    "right": 12,
+    "bottom": 12
   },
   "title": {
-    "text": [
-      "How widely do prices vary",
-      "across categories?"
-    ],
+    "text": "Shopee Malaysia | 2023",
     "subtitle": [
-      "Shopee Malaysia | 24 Apr–13 May 2023",
-      "Box = middle 50%; centre line = median. Prices use a logarithmic scale."
+      "24 Apr–13 May | n = 343",
+      "5 gift listings excluded",
+      "Box: middle 50%; line: median"
     ],
-    "anchor": "start"
+    "anchor": "start",
+    "fontSize": 12,
+    "fontWeight": "normal",
+    "subtitleFontSize": 11,
+    "subtitlePadding": 4,
+    "offset": 14
   },
   "config": {
     "font": "Arial",
@@ -39,7 +42,8 @@
       "gridColor": "#e6ecf0",
       "domainColor": "#bdc8d2",
       "tickColor": "#bdc8d2",
-      "titlePadding": 10
+      "titlePadding": 12,
+      "labelPadding": 5
     },
     "legend": {
       "labelFontSize": 12,
@@ -49,16 +53,16 @@
       "symbolStrokeWidth": 0
     },
     "title": {
-      "fontSize": 20,
+      "fontSize": 12,
       "color": "#172b46",
-      "subtitleFontSize": 12,
+      "subtitleFontSize": 11,
       "subtitleColor": "#536174",
       "anchor": "start",
       "offset": 16
     }
   },
   "data": {
-    "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/shopee_household_2023.csv",
+    "url": "data/shopee_household_2023.csv",
     "format": {
       "type": "csv",
       "parse": {
@@ -72,12 +76,15 @@
   "transform": [
     {
       "filter": "isValid(datum.price_actual) && datum.price_actual > 0"
+    },
+    {
+      "filter": "indexof([\"44437739.12410830021\",\"52784309.18045431232\",\"52784309.22224842773\",\"62781995.22828814214\",\"635979077.21639543747\"], datum.product_id) < 0"
     }
   ],
   "mark": {
     "type": "boxplot",
     "extent": 1.5,
-    "size": 24,
+    "size": 22,
     "median": {
       "color": "#172b46",
       "strokeWidth": 2
@@ -92,13 +99,14 @@
     "x": {
       "field": "price_actual",
       "type": "quantitative",
-      "title": "Listed price (RM, logarithmic scale)",
+      "title": "Price (RM, log)",
       "scale": {
         "type": "log",
         "domain": [
           0.05,
-          12000
-        ]
+          400
+        ],
+        "nice": false
       },
       "axis": {
         "values": [
@@ -106,10 +114,15 @@
           1,
           10,
           100,
-          1000,
-          10000
+          300
         ],
-        "labelExpr": "'RM' + format(datum.value, '~g')"
+        "labelExpr": "'RM' + format(datum.value, '~g')",
+        "labelOverlap": "greedy",
+        "labelSeparation": 8,
+        "labelFlush": 20,
+        "labelFontSize": 11,
+        "titleFontSize": 12,
+        "grid": true
       }
     },
     "y": {
@@ -124,7 +137,12 @@
         "Kitchen & Dining"
       ],
       "axis": {
-        "labelLimit": 260
+        "labelExpr": "datum.label === 'Housekeeping & Laundry' ? ['Housekeeping', '& Laundry'] : datum.label === 'Household Supplies' ? ['Household', 'Supplies'] : datum.label === 'Home Storage & Organization' ? ['Home Storage', '& Organization'] : datum.label === 'Kitchen Storage' ? ['Kitchen', 'Storage'] : ['Kitchen', '& Dining']",
+        "labelFontSize": 11,
+        "labelLineHeight": 14,
+        "labelPadding": 8,
+        "labelLimit": 130,
+        "labelOverlap": false
       }
     },
     "color": {
