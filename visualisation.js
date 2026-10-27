@@ -13,7 +13,7 @@
     '05_ratings_heatmap.vl.json',
     '06_rating_counts_jitter.vl.json',
     '07_cleaner_unit_prices.vl.json',
-    '08_advertised_price_slope.vl.json',
+    '08_advertised_price_dumbbell.vl.json',
     '09_state_price_choropleth.vega.json',
     '10_state_price_spread_symbols.vega.json',
     '11_sampled_outlets_dotdensity.vega.json'
@@ -178,32 +178,6 @@
         }
       }
       if (file.startsWith('07_')) spec.height = 360;
-      if (file.startsWith('08_')) {
-        // A short display key keeps the full listing titles in the tooltips.
-        const labels = {
-          '41544305.1108507216': '23 L water dispenser',
-          '12924338.1459052465': '8 L drink dispenser',
-          '12924338.4401154536': 'Buffet tray',
-          '12924338.1834208755': '5-piece buffet set',
-          '472316337.17534537672': '3-piece candy box set'
-        };
-        const expression = Object.entries(labels).reduceRight(
-          (tail, [id, label]) => 'datum.product_id === ' + JSON.stringify(id) + ' ? ' + JSON.stringify(label) + ' : (' + tail + ')',
-          "substring(datum.title,0,28)+'…'"
-        );
-        spec.transform.push({calculate: expression, as: 'display_title'});
-        spec.encoding.color.field = 'display_title';
-        spec.encoding.color.legend = {
-          title: 'Selected listings', orient: 'top', columns: 1,
-          labelFontSize: 11, labelLimit: Math.max(140, width - 90),
-          titleFontSize: 11, rowPadding: 4, offset: 12
-        };
-        spec.encoding.x.axis.labelExpr = "datum.label === 'Advertised reference' ? ['Advertised', 'reference'] : ['Listed selling', 'price']";
-        spec.encoding.x.axis.labelFontSize = 11;
-        spec.encoding.x.axis.labelLineHeight = 14;
-        spec.encoding.y.title = 'Price (RM)';
-        spec.height = 520;
-      }
       return spec;
     }
 
@@ -212,29 +186,6 @@
 
     if (file.startsWith('01_')) {
       spec.height = width < 650 ? 620 : 540;
-    }
-
-    if (file.startsWith('06_')) {
-      // Centre the grid and its key together, with a stacked key on phones.
-      spec.padding.bottom = 12;
-      const stacked = width - 24 < 650;
-      const tile = Math.min((width - 40) / 10, 28);
-      const plotHeight = stacked ? tile * 10 + 184 : tile * 10 + 48;
-      spec.height = top + 12 + plotHeight;
-      spec.signals.push({name: 'waffleLeft', update: 'width < 650 ? max(8,(width-10*tile)/2) : max(8,(width-560)/2)'});
-      const [squares, swatches, labels, footnote] = spec.marks;
-      squares.encode.update.x.signal = 'waffleLeft + (datum.cell%10)*tile';
-      swatches.encode.update.x.signal = 'width < 650 ? 8 : waffleLeft+10*tile+32';
-      labels.encode.update.x.signal = 'width < 650 ? 30 : waffleLeft+10*tile+54';
-      labels.encode.update.limit.signal = 'width < 650 ? width-40 : min(226,width-waffleLeft-10*tile-62)';
-      labels.encode.update.fontSize.value = 12;
-      labels.encode.update.lineHeight = {value: 14};
-      labels.encode.update.text.signal = "[datum.label, format(datum.n/datum.total,'.1%') + ' · ' + datum.n + ' listings']";
-      footnote.encode.update.text.value = 'Rating counts are not verified sales.';
-      footnote.encode.update.fontSize.value = 11;
-      footnote.encode.update.text.value = wrapText('Rating counts are not verified sales.', width - 16);
-      footnote.encode.update.lineHeight = {value: 14};
-      footnote.encode.update.y.signal = 'height-' + (footnote.encode.update.text.value.length > 1 ? 22 : 8);
     }
 
     if (/^(09|10|11)_/.test(file)) {

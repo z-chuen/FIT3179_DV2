@@ -1,0 +1,149 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Horizontal connected-dot (dumbbell) chart for five food-storage listings. The same five examples as the previous slope chart are selected by highest source rating count among listings with valid advertised reductions and a listed price of RM5–RM250. Each row links the advertised reference price and listed selling price from the same observation. Reference prices are seller-supplied and are not verified past transaction prices. Rows are ordered by advertised price difference. Full listing titles and both prices are available in tooltips.",
+  "width": 760,
+  "height": 400,
+  "autosize": {"type": "fit", "contains": "padding", "resize": false},
+  "padding": {"top": 12, "left": 8, "right": 12, "bottom": 12},
+  "title": {
+    "text": ["Advertised prices", "for five listings"],
+    "subtitle": [
+      "Shopee Malaysia | 24 Apr–13 May 2023",
+      "Two price fields from the same observation."
+    ],
+    "anchor": "start",
+    "frame": "bounds"
+  },
+  "data": {
+    "url": "data/shopee_household_2023.csv",
+    "format": {
+      "type": "csv",
+      "parse": {"price_ori": "number", "price_actual": "number", "rating_count": "number"}
+    }
+  },
+  "transform": [
+    {
+      "filter": "datum.product_category === 'Food Storage & Dispensers' && isValid(datum.price_ori) && isValid(datum.price_actual) && datum.price_ori > datum.price_actual && datum.price_actual >= 5 && datum.price_actual <= 250"
+    },
+    {
+      "window": [{"op": "row_number", "as": "example_rank"}],
+      "sort": [
+        {"field": "rating_count", "order": "descending"},
+        {"field": "product_id", "order": "ascending"}
+      ]
+    },
+    {"filter": "datum.example_rank <= 5"},
+    {
+      "lookup": "product_id",
+      "from": {
+        "data": {
+          "values": [
+            {"product_id": "41544305.1108507216", "short_label": "23 L water|dispenser"},
+            {"product_id": "12924338.1459052465", "short_label": "8 L drink|dispenser"},
+            {"product_id": "12924338.4401154536", "short_label": "Buffet tray"},
+            {"product_id": "12924338.1834208755", "short_label": "5-piece|buffet set"},
+            {"product_id": "472316337.17534537672", "short_label": "3-piece|candy box set"}
+          ]
+        },
+        "key": "product_id",
+        "fields": ["short_label"]
+      }
+    },
+    {"calculate": "isValid(datum.short_label) ? datum.short_label : substring(datum.title,0,24)", "as": "product_label"},
+    {"calculate": "datum.price_ori - datum.price_actual", "as": "price_gap"}
+  ],
+  "encoding": {
+    "x": {
+      "field": "price_actual",
+      "type": "quantitative",
+      "title": "Price (RM)",
+      "scale": {"domain": [0, 200], "zero": true, "nice": false},
+      "axis": {
+        "values": [0, 50, 100, 150, 200],
+        "labelExpr": "'RM' + format(datum.value, '.0f')",
+        "labelFontSize": 11,
+        "labelOverlap": "greedy",
+        "labelSeparation": 8,
+        "labelFlush": 20,
+        "grid": true
+      }
+    },
+    "y": {
+      "field": "product_label",
+      "type": "nominal",
+      "title": null,
+      "sort": {"field": "price_gap", "op": "max", "order": "descending"},
+      "axis": {
+        "labelExpr": "split(datum.label, '|')",
+        "labelFontSize": 11,
+        "labelLineHeight": 15,
+        "labelLimit": 125,
+        "labelPadding": 10,
+        "labelOverlap": false,
+        "ticks": false,
+        "domain": false
+      }
+    },
+    "tooltip": [
+      {"field": "title", "type": "nominal", "title": "Listing"},
+      {"field": "price_ori", "type": "quantitative", "title": "Advertised reference (RM)", "format": ".2f"},
+      {"field": "price_actual", "type": "quantitative", "title": "Listed price (RM)", "format": ".2f"},
+      {"field": "price_gap", "type": "quantitative", "title": "Advertised difference (RM)", "format": ".2f"},
+      {"field": "total_rating", "type": "nominal", "title": "Rating count (source)"},
+      {"field": "w_date", "type": "nominal", "title": "Observed on"},
+      {"field": "product_id", "type": "nominal", "title": "Listing ID"}
+    ]
+  },
+  "layer": [
+    {
+      "mark": {"type": "rule", "color": "#c4ccd2", "strokeWidth": 3},
+      "encoding": {"x2": {"field": "price_ori"}}
+    },
+    {
+      "transform": [
+        {"fold": ["price_ori", "price_actual"], "as": ["price_field", "price_rm"]},
+        {"calculate": "datum.price_field === 'price_ori' ? 'Advertised reference' : 'Listed price'", "as": "price_type"}
+      ],
+      "mark": {"type": "point", "filled": true, "size": 105, "opacity": 1, "stroke": "#ffffff", "strokeWidth": 1},
+      "encoding": {
+        "x": {"field": "price_rm", "type": "quantitative"},
+        "color": {
+          "field": "price_type",
+          "type": "nominal",
+          "scale": {"domain": ["Advertised reference", "Listed price"], "range": ["#758493", "#087b70"]},
+          "legend": {
+            "title": "Price field",
+            "orient": "top",
+            "direction": "horizontal",
+            "columns": {"expr": "width < 460 ? 1 : 2"},
+            "labelExpr": "datum.label === 'Advertised reference' ? 'Reference' : 'Listed'",
+            "labelFontSize": 11,
+            "titleFontSize": 11,
+            "labelLimit": 150,
+            "columnPadding": 20,
+            "rowPadding": 5,
+            "offset": 12
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "font": "Arial",
+    "background": "#ffffff",
+    "view": {"stroke": null},
+    "axis": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "gridColor": "#e6ecf0",
+      "domainColor": "#bdc8d2",
+      "tickColor": "#bdc8d2",
+      "titlePadding": 12,
+      "labelPadding": 5
+    },
+    "legend": {"labelColor": "#465467", "titleColor": "#172b46"},
+    "title": {"fontSize": 18, "color": "#172b46", "subtitleFontSize": 11, "subtitleColor": "#536174", "offset": 14}
+  }
+}
