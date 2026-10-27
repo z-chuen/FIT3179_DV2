@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-  "description": "Slope chart for five food-storage listings selected by highest source rating count among valid advertised reductions with a listed price between RM5 and RM250. Endpoints are fields from the same observation, not dates. A reference price is not verified past transaction evidence. The displayed y axis is logarithmic.",
+  "description": "Slope chart for five food-storage listings selected by highest source rating count among valid advertised reductions with a listed price between RM5 and RM250. Endpoints are fields from the same observation, not dates. A reference price is not verified past transaction evidence. The displayed y axis is linear and starts at RM0.",
   "width": 760,
   "height": 560,
   "autosize": {
@@ -58,7 +58,7 @@
     }
   },
   "data": {
-    "url": "https://raw.githubusercontent.com/z-chuen/FIT3179_DV2/main/data/shopee_household_2023.csv",
+    "url": "data/shopee_household_2023.csv",
     "format": {
       "type": "csv",
       "parse": {
@@ -131,23 +131,15 @@
     "y": {
       "field": "price_rm",
       "type": "quantitative",
-      "title": "Advertised price (RM, logarithmic scale)",
+      "title": "Advertised price (RM)",
       "scale": {
-        "type": "log"
+        "type": "linear",
+        "domainMin": 0,
+        "zero": true,
+        "nice": true
       },
       "axis": {
-        "values": [
-          10,
-          20,
-          50,
-          100,
-          200,
-          500,
-          1000,
-          2000,
-          5000,
-          10000
-        ],
+        "tickCount": 5,
         "labelExpr": "'RM'+format(datum.value,'~g')"
       }
     },
