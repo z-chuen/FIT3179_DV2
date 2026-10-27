@@ -11,7 +11,7 @@
     '03_price_rating_scatter.vl.json',
     '04_price_boxplot.vl.json',
     '05_ratings_heatmap.vl.json',
-    '06_rating_counts_waffle.vega.json',
+    '06_rating_counts_jitter.vl.json',
     '07_cleaner_unit_prices.vl.json',
     '08_advertised_price_slope.vl.json',
     '09_state_price_choropleth.vega.json',
