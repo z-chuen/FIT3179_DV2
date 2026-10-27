@@ -1,0 +1,212 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Customer-feedback jitter plot for 349 household listings in the Shopee Malaysia sample. Each point is one listing. The horizontal coordinate is the parsed source rating count; rounded source strings are retained in tooltips. Only the vertical display offset is jittered, deterministically from the listing ID, to reduce overlap within each product group. Rating counts are not sales. All current counts are positive; a logarithmic count scale covers the wide range of 3 to 50,700 ratings.",
+  "width": 760,
+  "height": 360,
+  "autosize": {
+    "type": "fit",
+    "contains": "padding",
+    "resize": false
+  },
+  "padding": {
+    "top": 12,
+    "left": 8,
+    "right": 12,
+    "bottom": 12
+  },
+  "title": {
+    "text": [
+      "Customer feedback",
+      "by product group"
+    ],
+    "subtitle": [
+      "Shopee Malaysia | 24 Apr–13 May 2023",
+      "Each dot = one listing. Vertical spread reduces overlap."
+    ],
+    "anchor": "start",
+    "frame": "bounds"
+  },
+  "data": {
+    "url": "data/shopee_household_2023.csv",
+    "format": {
+      "type": "csv",
+      "parse": {
+        "rating_count": "number",
+        "item_rating": "number"
+      }
+    }
+  },
+  "transform": [
+    {
+      "filter": "isValid(datum.rating_count) && datum.rating_count > 0 && indexof(['Cleaning supplies','Storage products','Kitchen essentials'], datum.topic_group) >= 0"
+    },
+    {
+      "calculate": "((toNumber(split(datum.product_id,'.')[0])*31 + toNumber(split(datum.product_id,'.')[1])) % 997) / 996 - 0.5",
+      "as": "jitter"
+    }
+  ],
+  "mark": {
+    "type": "point",
+    "filled": true,
+    "size": 42,
+    "opacity": 0.65,
+    "stroke": "#ffffff",
+    "strokeWidth": 0.5
+  },
+  "encoding": {
+    "x": {
+      "field": "rating_count",
+      "type": "quantitative",
+      "title": [
+        "Number of ratings",
+        "(logarithmic scale)"
+      ],
+      "scale": {
+        "type": "log",
+        "domain": [
+          1,
+          100000
+        ],
+        "nice": false
+      },
+      "axis": {
+        "values": [
+          1,
+          10,
+          100,
+          1000,
+          10000,
+          100000
+        ],
+        "format": "~s",
+        "labelOverlap": "greedy",
+        "labelSeparation": 8,
+        "labelFlush": 20,
+        "labelFontSize": 11,
+        "titleFontSize": 12,
+        "titleLineHeight": 15,
+        "grid": true
+      }
+    },
+    "y": {
+      "field": "topic_group",
+      "type": "nominal",
+      "sort": [
+        "Cleaning supplies",
+        "Storage products",
+        "Kitchen essentials"
+      ],
+      "title": null,
+      "axis": {
+        "labelExpr": "datum.label === 'Cleaning supplies' ? ['Cleaning','supplies'] : datum.label === 'Storage products' ? ['Storage','products'] : ['Kitchen','essentials']",
+        "labelFontSize": 12,
+        "labelLineHeight": 15,
+        "labelLimit": 110,
+        "labelPadding": 10,
+        "labelOverlap": false,
+        "ticks": false,
+        "domain": false
+      }
+    },
+    "yOffset": {
+      "field": "jitter",
+      "type": "quantitative",
+      "scale": {
+        "domain": [
+          -0.5,
+          0.5
+        ],
+        "range": [
+          {
+            "expr": "bandwidth('y')*0.2"
+          },
+          {
+            "expr": "bandwidth('y')*0.8"
+          }
+        ],
+        "zero": false
+      }
+    },
+    "color": {
+      "field": "topic_group",
+      "type": "nominal",
+      "scale": {
+        "domain": [
+          "Cleaning supplies",
+          "Storage products",
+          "Kitchen essentials"
+        ],
+        "range": [
+          "#17857c",
+          "#8266b2",
+          "#ce7b22"
+        ]
+      },
+      "legend": null
+    },
+    "tooltip": [
+      {
+        "field": "title",
+        "type": "nominal",
+        "title": "Listing"
+      },
+      {
+        "field": "topic_group",
+        "type": "nominal",
+        "title": "Product group"
+      },
+      {
+        "field": "total_rating",
+        "type": "nominal",
+        "title": "Rating count (source)"
+      },
+      {
+        "field": "rating_count",
+        "type": "quantitative",
+        "title": "Parsed count (approx.)",
+        "format": ",.0f"
+      },
+      {
+        "field": "item_rating",
+        "type": "quantitative",
+        "title": "Rating out of 5",
+        "format": ".1f"
+      },
+      {
+        "field": "w_date",
+        "type": "nominal",
+        "title": "Observed on"
+      },
+      {
+        "field": "product_id",
+        "type": "nominal",
+        "title": "Listing ID"
+      }
+    ]
+  },
+  "config": {
+    "font": "Arial",
+    "background": "#ffffff",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#465467",
+      "titleColor": "#172b46",
+      "gridColor": "#e6ecf0",
+      "domainColor": "#bdc8d2",
+      "tickColor": "#bdc8d2",
+      "titlePadding": 12,
+      "labelPadding": 5
+    },
+    "title": {
+      "fontSize": 18,
+      "color": "#172b46",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#536174",
+      "offset": 14
+    }
+  }
+}
